@@ -1,11 +1,14 @@
-import { View, Text, TouchableOpacity, TextInput, Platform, ScrollView, StatusBar, KeyboardAvoidingView } from 'react-native'
+import { View, Text, Image, TouchableOpacity, TextInput, Platform, ScrollView, StatusBar, KeyboardAvoidingView } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Controller, useForm } from 'react-hook-form'
-import { TCategories, Tpet } from '@/types/form.types'
+import { TCategories, Tpet, TuserResponse } from '@/types/form.types'
 import { Picker } from '@react-native-picker/picker'
-import { getCategories } from '@/api/api'
+import { createPet, getCategories } from '@/api/api'
+import * as ImagePicker from "expo-image-picker"
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { jwtDecode } from 'jwt-decode'
 
 export default function pets_form() {
   const router = useRouter()
@@ -13,6 +16,7 @@ export default function pets_form() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors }
   } = useForm<Tpet>({
     defaultValues: {
@@ -39,8 +43,36 @@ export default function pets_form() {
     fetchCategories()
   }, [])
 
-  const onSubmit = (data: Tpet) => {
-    console.log(data)
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+
+  const pickImage = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!res.canceled) {
+      const photo = res.assets[0].uri
+      setPhotoUrl(photo)
+      setValue('photo_path', photo);
+    }
+  }
+
+  const onSubmit = async (data: Tpet) => {
+    const token = await AsyncStorage.getItem('token')
+    if (!token) throw new Error("Нет токена!")
+
+    const decoded = jwtDecode(token) as TuserResponse
+    const userId = decoded.id
+
+    const petData = { ...data, owner_id: userId }
+    try {
+      await createPet(petData, photoUrl, token)
+      router.replace('/pets')
+    } catch (error) {
+      throw new Error("Ошибка при создании питомца");
+    }
   }
 
   return (
@@ -65,10 +97,19 @@ export default function pets_form() {
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity className='self-center mb-10'>
-          <View className='w-36 h-36 rounded-full bg-gray-400 justify-center items-center relative'>
-            <View className='w-12 h-12 bg-black rounded-full flex justify-center items-center absolute bottom-0 left-24'>
-              <Text className='text-white text-center text-3xl'>+</Text>
+        <TouchableOpacity className="self-center mb-10" onPress={() => pickImage()}>
+          <View className="w-36 h-36 rounded-full justify-center items-center relative">
+            {photoUrl ? (
+              <Image
+                source={{ uri: photoUrl }}
+                className='w-36 h-36 rounded-full'
+              />
+            ) : (
+              <View className="w-36 h-36 rounded-full bg-gray-400 justify-center items-center" />
+            )}
+
+            <View className="w-12 h-12 bg-black rounded-full flex justify-center items-center absolute bottom-0 left-24">
+              <Text className="text-white text-center text-3xl">+</Text>
             </View>
           </View>
         </TouchableOpacity>

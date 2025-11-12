@@ -6,21 +6,22 @@ import * as User from '../model/userModel.js';
 
 
 export const Register = async (req, res) => {
-    const { name, password, email } = req.body
+    const { username, name, password, email } = req.body
 
-    if (!name || name.trim() === "") return res.status(400).json({ message: "Имя не должно быть пустым" })
+    if (!username || username.trim() === "") return res.status(400).json({ message: "Имя не должно быть пустым" })
+    if (!name || name.trim() === "") return res.status(400).json({ message: "Логин не должен быть пустым" })
     if (!password || password.length < 6) return res.status(400).json({ message: "Пароль должен быть от 6 символов" })
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!email || !emailRegex.test(email)) return res.status(400).json({ message: "Некорректный email" })
 
 
     try {
-        const existUser = await User.getByLogin(name)
+        const existUser = await User.getByLogin(username)
         if (existUser) return res.status(409).json({message: "User was registred"})
         
         const hashPassword = await bcrypt.hash(password, 10)
 
-        const newUser = await User.register({name, password: hashPassword, email})
+        const newUser = await User.register({ username, name, password: hashPassword, email})
         res.status(201).json({success: true, userId: newUser.id})
 
     } catch (error) {
@@ -30,10 +31,11 @@ export const Register = async (req, res) => {
 
 
 export const Login = async (req, res) => {
-    const {name, password} = req.body
+    const {username, password} = req.body
 
     try {
-        const user = await User.login({name, password})
+        const user = await User.login({username, password})
+        console.log(user)
         if (!user) return res.status(401).json({message: "Неверное имя или пароль"})
         const isValidPassword = await bcrypt.compare(password, user.password)
 

@@ -1,4 +1,5 @@
 import Advice from '@/components/Advice'
+import CardList from '@/components/CardList'
 import { TuserResponse } from '@/types/form.types'
 import getTime from '@/utils/getTime'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -6,7 +7,7 @@ import { useRouter } from 'expo-router'
 import 'jwt-decode'
 import { jwtDecode } from 'jwt-decode'
 import React, { useEffect, useState } from 'react'
-import { Text, View } from 'react-native'
+import { ScrollView, Text, View } from 'react-native'
 
 export default function home() {
 const router = useRouter()

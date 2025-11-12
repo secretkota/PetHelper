@@ -11,9 +11,9 @@ export const getCategories = (req, res) => {
     })
 }
 
-export const getAll= () => {
+export const getAll= (userID) => {
     return new Promise ((resolve, reject) => {
-        db.all("SELECT * FROM pet ", (err, row) => {
+        db.all("SELECT * FROM pet WHERE owner_id = ?", [userID], (err, row) => {
             if (err) return reject(err)
             resolve(row)
         })
