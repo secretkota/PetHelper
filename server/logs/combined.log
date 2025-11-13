@@ -1,0 +1,66 @@
+13-11-2025 22:12:46 [[31merror[39m : Error: Endpoint not found
+    at file:///C:/Users/PCochka/Desktop/petShop_project/server/index.js:20:11
+    at Layer.handleRequest (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:342:13)
+    at C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:297:9
+    at processParams (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:291:5)
+    at jsonParser (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\body-parser\lib\types\json.js:100:7)
+    at Layer.handleRequest (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:342:13)
+    at C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:297:9]
+13-11-2025 22:13:45 [[31merror[39m] : Error: Endpoint not found
+    at file:///C:/Users/PCochka/Desktop/petShop_project/server/index.js:20:11
+    at Layer.handleRequest (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:342:13)
+    at C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:297:9
+    at processParams (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:291:5)
+    at jsonParser (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\body-parser\lib\types\json.js:100:7)
+    at Layer.handleRequest (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:342:13)
+    at C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:297:9
+2025-11-13 22:14:26 [31merror[39m: Error: Endpoint not found
+    at file:///C:/Users/PCochka/Desktop/petShop_project/server/index.js:20:11
+    at Layer.handleRequest (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:342:13)
+    at C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:297:9
+    at processParams (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:291:5)
+    at jsonParser (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\body-parser\lib\types\json.js:100:7)
+    at Layer.handleRequest (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:342:13)
+    at C:\Users\PCochka\Desktop\petShop_project\server\node_modules\router\index.js:297:9
+2025-11-13 22:14:43 [31merror[39m: [31m	GET /fdgdfsgsrt - Endpoint not found[39m
+2025-11-13 22:15:06 error: 	GET /fdgdfsgsrt - Endpoint not found
+2025-11-13 22:17:58 error: 	GET /fdgdfsgsrt - Endpoint not found
+2025-11-13 22:29:29 error: 	GET /fdgdfsgsrt - Endpoint not found
+2025-11-13 22:32:00 error: 	GET / - Endpoint not found
+2025-11-13 22:36:09 error: 	GET / - Endpoint not found
+2025-11-13 22:36:29 error: 	GET /user/login - Endpoint not found
+2025-11-13 22:36:49 error: 	GET /login - Endpoint not found
+2025-11-13 22:37:04 error: 	POST /user/login - Internal server error
+2025-11-13 22:38:58 error: 	POST /user/register - Имя не должно быть пустым
+2025-11-13 22:40:58 error: 	POST /user/register - Имя не должно быть пустым
+2025-11-13 22:41:25 error: 	POST /user/register - Пароль должен быть от 8 символов
+2025-11-13 22:41:39 error: 	POST /user/register - Internal server error
+2025-11-13 22:42:21 error: 	POST /user/register - Internal server error
+2025-11-13 22:42:36 error: 	POST /user/register - Internal server error
+2025-11-13 22:43:50 error: 	POST /user/register - Internal server error Error: Internal server error
+    at Register (file:///C:/Users/PCochka/Desktop/petShop_project/server/controllers/userController.js:30:15)
+2025-11-13 22:44:29 error: 	POST /user/register - Internal server error 
+ Error: Internal server error
+    at Register (file:///C:/Users/PCochka/Desktop/petShop_project/server/controllers/userController.js:30:15)
+2025-11-13 22:45:31 error: 	POST /user/register - User was reegistred 
+ Error: User was reegistred
+    at Register (file:///C:/Users/PCochka/Desktop/petShop_project/server/controllers/userController.js:22:26)
+2025-11-13 22:45:49 error: 	POST /user/register - User was registred 
+ Error: User was registred
+    at Register (file:///C:/Users/PCochka/Desktop/petShop_project/server/controllers/userController.js:22:26)
+2025-11-13 22:45:53 error: 	POST /user/register - Internal server error 
+ Error: Internal server error
+    at Register (file:///C:/Users/PCochka/Desktop/petShop_project/server/controllers/userController.js:30:11)
+2025-11-13 22:46:38 error: 	POST /user/register - User was registred
+2025-11-13 22:46:41 error: 	POST /user/register - Internal server error
+2025-11-13 22:48:11 error: 	POST /user/register - User was registred
+2025-11-13 22:50:34 error: 	POST /user/register - User was registred
