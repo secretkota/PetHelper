@@ -15,5 +15,5 @@
     "**/*.tsx",
     "nativewind-env.d.ts"
 , "api/api.js"    
-  ]
+, "utils/formatAge.js"  ]
 }

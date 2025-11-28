@@ -19,6 +19,7 @@ export type TCategories = {
 }
 
 export type Tpet = {
+    id?: number,
     owner_id?: number,
     name: string,
     breed: string,

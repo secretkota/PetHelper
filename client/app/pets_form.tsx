@@ -1,17 +1,18 @@
 import { View, Text, Image, TouchableOpacity, TextInput, Platform, ScrollView, StatusBar, KeyboardAvoidingView } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Controller, useForm } from 'react-hook-form'
 import { TCategories, Tpet, TuserResponse } from '@/types/form.types'
 import { Picker } from '@react-native-picker/picker'
-import { createPet, getCategories } from '@/api/api'
+import { createPet, getCategories, getPetByID, updatePet } from '@/api/api'
 import * as ImagePicker from "expo-image-picker"
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { jwtDecode } from 'jwt-decode'
 
 export default function pets_form() {
   const router = useRouter()
+  const { id } = useLocalSearchParams()
   const scrollRef = useRef<ScrollView>(null)
   const {
     control,
@@ -40,8 +41,30 @@ export default function pets_form() {
         console.log(err)
       }
     }
+
+
     fetchCategories()
+
   }, [])
+
+  useEffect(() => {
+    const fetchPet = async () => {
+      const token = await AsyncStorage.getItem("token")
+      const pet = await getPetByID(token, id)
+
+
+      setValue("name", pet.name)
+      setValue("breed", pet.breed)
+      setValue("type", pet.type)
+      setValue("age", pet.age)
+      setValue("desc", pet.desc)
+      setPhotoUrl(pet.photo_path)
+    }
+
+
+
+    fetchPet()
+  }, [id])
 
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
 
@@ -66,12 +89,23 @@ export default function pets_form() {
     const decoded = jwtDecode(token) as TuserResponse
     const userId = decoded.id
 
-    const petData = { ...data, owner_id: userId }
+    const petData = { ...data, owner_id: userId, id: id }
+
+
+    console.log(petData)
+
+
     try {
-      await createPet(petData, photoUrl, token)
+      if (id) {
+        console.log(id)
+        await updatePet(id, petData, photoUrl, token)
+      } else {
+        await createPet(petData, photoUrl, token)
+      }
+
       router.replace('/pets')
     } catch (error) {
-      throw new Error("Ошибка при создании питомца");
+      throw new Error("Ошибка при работе с питомцем");
     }
   }
 
@@ -245,7 +279,8 @@ export default function pets_form() {
           className="bg-black rounded-xl p-4 mb-4"
           onPress={handleSubmit(onSubmit)}
         >
-          <Text className="text-white text-center font-bold text-lg">Сохранить</Text>
+          <Text className="text-white text-center font-bold text-lg">{id ? "Обновить" : 
+            "Создать"}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
