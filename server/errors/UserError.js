@@ -7,7 +7,7 @@ export class ConflictError extends AppError {
 }
 
 export class InvalidError extends AppError {
-    constructor(message = "Unauthorized", statuCode = 400) {
+    constructor(message = "Unauthorized", statuCode = 401) {
         super(message, statuCode)
     }
 }

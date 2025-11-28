@@ -1,165 +1,412 @@
-# Лабораторная работа №3: Аутентификация и авторизация в Node.js
+# Laborator 5: Errors logger
 
-## Цель работы
-- Освоить методы аутентификации и авторизации в backend-приложениях на Node.js
-- Реализовать защиту REST API с помощью JWT (JSON Web Token)
-- Научиться разграничивать доступ к ресурсам в зависимости от роли пользователя
 
-## Описание проекта
-
-Данный проект представляет собой RESTful API сервис для управления пользователями и их питомцами с системой аутентификации и авторизации.
-
-### Основные функции:
-- Регистрация и аутентификация пользователей
-- Управление данными пользователей
-- Управление данными питомцев
-- Разграничение прав доступа на основе ролей пользователей
-
-## Структура проекта
+## Архитектура проекта
 
 ```
-├── controllers/
-│   ├── petController.js      # Контроллер для управления питомцами
-│   └── userController.js     # Контроллер для управления пользователями
-├── helpers/
-│   ├── createTable.js        # Скрипт создания таблиц в БД
-│   └── db.js                 # Конфигурация подключения к БД
-├── middleware/
-│   └── authMiddleware.js     # Middleware для аутентификации
-├── model/
-│   ├── petModel.js          # Модель данных питомца
-│   └── userModel.js         # Модель данных пользователя
-├── routes/
-│   ├── petRoute.js          # Маршруты для API питомцев
-│   └── userRoute.js         # Маршруты для API пользователей
-├── index.js                 # Основной файл приложения
-└── package.json            # Зависимости проекта
+server/
+├── controllers/        # Контроллеры для обработки запросов
+├── routes/            # API маршруты
+├── models/            # Модели данных
+├── middleware/        # Express middleware
+├── validators/        # Схемы валидации данных
+├── errors/            # Пользовательские классы ошибок
+├── utils/             # Вспомогательные утилиты
+├── helpers/           # Помощники (создание таблиц БД)
+├── logs/              # Директория для сохранения логов
+└── index.js           # Точка входа приложения
 ```
 
-## Стек технологий
-- Node.js
-- Express.js
-- SQLite
-- JWT для аутентификации
-- bcrypt для хеширования паролей
+---
 
-## Установка и запуск проекта
+## Обработка ошибок
 
-### Предварительные требования
-- Node.js (версия 14 или выше)
-- npm (менеджер пакетов Node.js)
-- SQLite (установленный )
+### Система пользовательских ошибок
 
-### Шаги по установке
-
-1. Клонируйте репозиторий:
-```bash
-git clone https://github.com/secretkota/laborator_SERVER_SIDE_NODEJS.git
-cd laborator_nr3
-```
-
-2. Установите зависимости:
-```bash
-npm install
-```
-
-3. Создайте файл `.env` в корневой директории проекта со следующими параметрами:
-```env
-JWT_SECRET=your_jwt_secret
-```
-`Пример env находится в env copy`
-
-4. Инициализируйте базу данных:
-- База данных будет создана автоматически при первом запуске приложения
-- Таблицы создаются с помощью скрипта `helpers/createTable.js`
-
-### Запуск проекта
-
-Для запуска в режиме разработки:
-```bash
-npm run dev
-```
-
-После запуска API будет доступен по адресу: `http://localhost:8000`
-
-### Тестирование API
-
-Вы можете использовать Postman или любой другой HTTP-клиент для тестирования API endpoints:
-
-1. Регистрация нового пользователя:
-```http
-POST http://localhost:3000/api/auth/register
-Content-Type: application/json
-
-{
-    "username": "testuser",
-    "email": "test@example.com",
-    "password": "password123"
+#### **AppError** (базовый класс)
+```javascript
+export class AppError extends Error {
+    constructor(message, statusCode = 500) {
+        super(message)
+        this.statusCode = statusCode
+        Error.captureStackTrace(this, this.constructor)
+    }
 }
 ```
 
-2. Вход в систему:
-```http
-POST http://localhost:3000/api/auth/login
-Content-Type: application/json
+Базовый класс всех ошибок с поддержкой кода состояния HTTP.
 
-{
-    "email": "test@example.com",
-    "password": "password123"
+#### **NotFoundError**
+```javascript
+export class NotFoundError extends AppError {
+    constructor(message = "Resourse not found") {
+        super(message, 404)
+    }
 }
 ```
 
-## Ответы на контрольные вопросы
+Используется когда ресурс не найден (HTTP 404).
 
-### 1. Что такое JWT и как он работает?
+#### **ConnectError** (DataBaseError)
+```javascript
+export class ConnectError extends AppError {
+    constructor(message = 'Failed connect to database') {
+        super(message, 503)
+    }
+}
+```
 
-JWT (JSON Web Token) - это открытый стандарт для создания токенов доступа, который позволяет безопасно передавать информацию между сторонами в виде JSON-объекта. JWT состоит из трёх частей:
-- Header (заголовок) - содержит тип токена и алгоритм шифрования
-- Payload (полезная нагрузка) - содержит утверждения о пользователе
-- Signature (подпись) - используется для проверки целостности токена
+Используется при ошибках подключения к БД (HTTP 503).
 
-Процесс работы:
-1. Пользователь аутентифицируется
-2. Сервер создаёт JWT с необходимыми данными
-3. Токен отправляется клиенту
-4. Клиент использует токен в заголовке Authorization для последующих запросов
-5. Сервер проверяет подпись токена и предоставляет доступ к ресурсам
+### Обработка асинхронных ошибок
 
-### 2. Как реализовать безопасное хранение паролей пользователей?
+**asyncWrapper** - middleware для обработки ошибок в асинхронных функциях:
 
-Для безопасного хранения паролей используются следующие практики:
-1. Хеширование паролей с использованием современных алгоритмов (например, bcrypt)
-2. Использование "соли" (salt) для каждого пароля
-3. Достаточное количество раундов хеширования
-4. Никогда не хранить пароли в открытом виде
-5. Использование надёжных криптографических библиотек
+```javascript
+const asyncWrapper = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+```
 
-### 3. В чём разница между аутентификацией и авторизацией?
+- Предотвращает необработанные+ ошибки
+- Перехватывает исключения в асинхронных функциях
+- Передает ошибки в глобальный errorHandler
 
-**Аутентификация:**
-- Процесс проверки подлинности пользователя
-- Отвечает на вопрос "Кто вы?"
-- Происходит до авторизации
-- Примеры: логин/пароль, биометрия, токены
+### Централизованный обработчик ошибок
 
-**Авторизация:**
-- Процесс проверки прав доступа аутентифицированного пользователя
-- Отвечает на вопрос "Что вам разрешено делать?"
-- Происходит после аутентификации
-- Примеры: роли, разрешения, политики доступа
+**errorHandler middleware** - единая точка обработки всех ошибок:
 
-### 4. Какие преимущества и недостатки использования Passport.js для аутентификации в Node.js?
+```javascript
+export const errorHandler = (err, req, res, next) => {
+    const statusCode = err.statusCode
+    const message = err.message
 
-**Преимущества:**
-- Большое количество готовых стратегий аутентификации
-- Гибкая модульная архитектура
-- Простота интеграции с Express.js
-- Поддержка различных провайдеров OAuth
-- Активное сообщество и хорошая документация
+    logger.error(`${req.method} ${req.originalUrl} - ${message}`, { stack: err.stack })
+   
+    if (err.details) {
+        return res.status(statusCode).json({
+            status: "error",
+            message,
+            errors: err.details
+        });
+    }
 
-**Недостатки:**
-- Дополнительная зависимость в проекте
-- Может быть избыточным для простых случаев аутентификации
-- Необходимость настройки каждой стратегии
-- Некоторая сложность в понимании для начинающих
-- Потенциальные проблемы с производительностью при использовании множества стратегий
+    res.status(statusCode).json({
+        error: statusCode,
+        message
+    });
+}
+```
+
+**Функции:**
+- Логирование всех ошибок с контекстом
+- Унифицированный формат ответа
+- Поддержка детальной информации об ошибках валидации
+
+### Регистрация в Express
+
+```javascript
+// В index.js
+app.use(errorHandler)  
+```
+
+---
+
+## Валидация данных
+### Схемы валидации
+
+#### **Pet Validation Schema**
+```javascript
+import { body } from "express-validator";
+
+export const petValidationSchema = [
+    body("name")
+        .trim()
+        .notEmpty().withMessage("Поле name обязательно")
+        .isLength({ min: 2, max: 50 }).withMessage("name должно быть от 2 до 50 символов"),
+
+    body("type")
+        .trim()
+        .notEmpty().withMessage("Поле type обязательно"),
+
+    body("age")
+        .notEmpty().withMessage("Поле age обязательно")
+        .isInt({ min: 0, max: 50 }).withMessage("age должен быть целым числом от 0 до 50"),
+
+    body("desc")
+        .trim()
+        .isLength({ max: 200 }).withMessage("desc может содержать максимум 200 символов")
+]
+```
+
+- `.trim()` - удаляет пробелы по краям
+- `.notEmpty()` - проверяет на пустоту
+- `.isLength()` - проверяет длину строки
+- `.isInt()` - проверяет тип и диапазон чисел
+
+#### **User Validation Schema**
+```javascript
+export const userValidationSchema = [
+    body("username")
+        .trim()
+        .notEmpty()
+        .withMessage("Username is required")
+        .isLength({ min: 3, max: 20 })
+        .withMessage("username need be at 3 characters max 20"),
+
+    body("password")
+        .isLength({ min: 6 })
+        .withMessage("Password must be at least 8 characters")
+        .matches(/[0-9]/)
+        .withMessage("Password must contain a number"),
+
+    body("email")
+        .optional()
+        .trim()
+        .isEmail()
+        .withMessage('Invalid email')
+        .normalizeEmail()
+]
+```
+
+**Особенности:**
+- `.isEmail()` - валидация e-mail
+- `.matches(/regex/)` - проверка по регулярному выражению
+- Требование букв и цифр в пароле
+- `.optional()` - поле может быть пропущено
+
+### Middleware для проверки ошибок валидации
+
+```javascript
+export const validateData = (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            message: "Validation failed",
+            errors: errors.array(),
+        })
+    }
+    next()
+}
+```
+
+### Интеграция в маршруты
+
+```javascript
+// В petRoute.js
+router.post('/', 
+    petValidationSchema,      
+    validateData,               
+    petController.create        
+)
+```
+
+**Поток обработки:**
+1. Приходит запрос
+2. express-validator проверяет данные
+3. validateData проверяет результаты
+4. Если ошибок нет - передает req дальше
+5. Если ошибки - возвращает ответ 400
+
+### Формат ошибки валидации
+
+```json
+{
+    "message": "Validation failed",
+    "errors": [
+        {
+            "value": "a",
+            "msg": "name должно быть от 2 до 50 символов",
+            "param": "name",
+            "location": "body"
+        }
+    ]
+}
+```
+
+---
+
+## Логирование
+
+### Конфигурация Winston
+
+`winston` - профессиональная библиотека для логирования:
+
+```javascript
+import winston from 'winston';
+
+const { combine, timestamp, printf, colorize, errors, align } = winston.format;
+
+const logFormat = printf(({ level, message, timestamp }) => {
+  return `${timestamp} ${level}: ${message}`;
+});
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: combine(
+    errors({ stack: true }),    
+    timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    align(),
+    logFormat
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' }),
+    new winston.transports.File({ filename: 'logs/action.log', level: 'http' }),
+  ],
+})
+```
+
+### места сохранения логов
+
+| Транспорт | Назначение | Уровень |
+|-----------|-----------|---------|
+| **Console** | Вывод в консоль разработчика | all |
+| **error.log** | Только ошибки | error |
+| **combined.log** | Все логи | all |
+| **action.log** | HTTP запросы | http |
+
+### Уровни логирования
+
+```
+error   - ошибки приложения
+warn    - предупреждения
+info    - информационные сообщения
+http    - HTTP запросы
+debug   - отладочная информация
+```
+
+### Request Logger Middleware
+
+```javascript
+export const requestLogger = (req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const duration = Date.now() - start
+    const { method, originalUrl } = req
+    const { statusCode } = res
+
+    if (statusCode < 400) {
+      logger.http(`${method} ${originalUrl} ${statusCode} - ${duration}ms`)
+    }
+  })
+
+  next()
+}
+```
+
+**Логирует:**
+- HTTP метод (GET, POST и т.д.)
+- URL запроса
+- Код ответа
+- Время выполнения
+
+### Error Handler Логирование
+
+```javascript
+logger.error(`${req.method} ${req.originalUrl} - ${message}`, { stack: err.stack })
+```
+
+```
+2025-11-16 14:24:10 error: POST /pet - Поле name обязательно
+```
+
+###  Как логирование работает в приложении
+
+```javascript
+// В index.js
+app.use(requestLogger)  // Логирует успешные запросы
+
+// В errorHandler
+logger.error(`...`)     // Логирует ошибки
+```
+
+---
+
+# Полный поток обработки запроса
+
+```
+1. Запрос поступает → requestLogger (логирует начало)
+                    ↓
+2. Валидация данных → express-validator + validateData
+                    ↓
+3. Обработка       → asyncWrapper обвязывает контроллер
+                    ↓
+4. Успех           → Ответ клиенту + логирование
+                    ↓
+5. Ошибка          → asyncWrapper ловит → errorHandler
+                    ↓
+6. errorHandler     → Логирует ошибку + унифицированный ответ
+```
+
+
+
+## Контрольные вопросы и ответы
+
+### **Какие преимущества централизованной обработки ошибок в Express?**
+
+**Ответ:**
+
+Централизованная обработка ошибок предоставляет следующие преимущества:
+
+- **Единая точка контроля**
+- **Консистентный формат ответов**
+- **Логирование**
+- **Масштабируемость**
+- **Безопасность**
+- **Обработка необработанных ошибок**
+
+---
+
+### **Какие категории логов вы решили вести в системе и чем обусловлен ваш выбор?**
+
+**Ответ:**
+
+В приложении используются следующие категории логов:
+
+**Категория 1: HTTP логи (уровень `http`)**
+- **Что логируется:** Все успешные HTTP запросы
+- **Почему?:**
+  - Помогает отследить рабочий процесс приложения
+  - Выявить медленные эндпоинты (по времени выполнения)
+
+**Категория 2: ERROR логи (уровень `error`)**
+- **Что логируется:** Все ошибки приложения
+- **Почему?:**
+  - Критично для диагностики проблем
+  - Сохраняется в отдельный файл error.log
+  - Помогает найти баги в production
+
+**Категория 3: INFO логи (уровень `info`)**
+- **Что логируется:** Информационные события (старт сервера и т.д.)
+- **Почему?:**
+  - Помогает отследить жизненный цикл приложения
+  - Подтверждение важных операций
+
+**Места хранения:**
+```
+error.log    → Только ошибки (для быстрого поиска проблем)
+combined.log → Все логи (полная история)
+action.log   → HTTP запросы (анализ использования)
+Console      → Все логи (разработка)
+```
+### **Какие существуют подходы к валидации данных в Express и какие из них вы использовали?**
+
+**Существующие подходы к валидации:**
+
+| Подход | Описание | 
+|--------|---------|
+| **1. express-validator** | Декларативная валидация |  
+| **2. Joi** | Отдельная библиотека для схем | 
+| **3. Yup** | Популярный валидатор | 
+| **4. Ручная валидация** | Написать свою логику |
+
+**Почему express-validator был выбран:**
+- Удобнее, чем Joi (не нужны доп. middleware)
+- Безопаснее, чем ручная валидация
+- Встроенная санитизация
+- Лучшая интеграция с Express
+
+---
